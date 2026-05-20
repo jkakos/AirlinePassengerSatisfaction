@@ -1,0 +1,32 @@
+CREATE OR REPLACE VIEW {{ view_name }} AS
+SELECT
+    `id`
+    , `Gender` AS gender
+    , `Customer Type` AS customer_type
+    , `Age` AS age
+    , `Type of Travel` AS travel_type
+    , `Class` AS class
+    , `Flight Distance` AS flight_distance
+    , `Inflight wifi service` AS wifi_service
+    , `Departure_Arrival time convenient` AS convenient_time
+    , `Ease of Online booking` AS online_booking_ease
+    , `Gate location` AS gate_location
+    , `Food and drink` AS food_drink
+    , `Online boarding` AS online_boarding
+    , `Seat comfort` AS seat_comfort
+    , `Inflight entertainment` AS inflight_entertainment
+    , `On-board service` AS onboard_service
+    , `Leg room service` AS leg_room
+    , `Baggage handling` AS baggage_handling
+    , `Checkin service` AS checkin_service
+    , `Inflight service` AS inflight_service
+    , `Cleanliness` AS cleanliness
+    , `Departure Delay in Minutes` AS departure_delay
+    , CAST(
+        COALESCE(`Arrival Delay in Minutes`, `Departure Delay in Minutes`) AS INT64
+    ) AS arrival_delay
+    , CASE
+        WHEN `satisfaction` = 'satisfied' THEN 1
+        ELSE 0
+    END AS satisfied
+FROM {{ source_table}};

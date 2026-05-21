@@ -7,6 +7,75 @@ from jinja2 import Environment, FileSystemLoader
 import config
 
 
+class TemplateConfig:
+    """
+    A simple class to hold necessary information for generating a SQL query
+    from a Jinja2 template.
+
+    """
+
+    def __init__(self, template_name: str, view_name: str, source_table: str) -> None:
+        self.template_name = template_name
+        self.view_name = view_name
+        self.source_table = source_table
+
+
+class TemplateConfigFactory:
+    """
+    Factory for creating TemplateConfig objects based on combinations of
+    the datasets used and number of versions. The main function
+    get_template_info() returns a list of TemplateConfig objects that can be
+    used by TemplatedViewQuery to generate SQL queries.
+
+    """
+
+    def __init__(
+        self,
+        datasets: Sequence[str],
+        versions: int,
+        template_name: str,
+        view_name: str,
+        source_table: str,
+    ) -> None:
+        self.template_info_list: list[TemplateConfig] | None = None
+        self.datasets = datasets
+        self.versions = versions
+        self.template_name = template_name
+        self.view_name = view_name
+        self.source_table = source_table
+
+    def get_template_info(self) -> list[TemplateConfig]:
+        """
+        Return a list of TemplateConfig objects. If the list has not yet
+        been created, it will be created first and then returned.
+
+        """
+        if self.template_info_list is None:
+            self.template_info_list = self._make_template_info_list()
+
+        return self.template_info_list
+
+    def _make_template_info_list(self) -> list[TemplateConfig]:
+        """
+        Construct a list of TemplateConfig objects.
+
+        """
+        self.template_info_list = []
+        for dataset in self.datasets:
+            for version in range(1, self.versions + 1):
+                self.template_info_list.append(
+                    TemplateConfig(
+                        template_name=self.template_name.format(version=version),
+                        view_name=self.view_name.format(
+                            dataset=dataset, version=version
+                        ),
+                        source_table=self.source_table.format(dataset=dataset),
+                    )
+                )
+
+        return self.template_info_list
+
+
 class SQLQueryProvider(Protocol):
     def get_query(self) -> str: ...
 
@@ -57,22 +126,32 @@ def execute_queries(query_providers: Sequence[SQLQueryProvider]) -> None:
 if __name__ == '__main__':
     SQL_DIR = pathlib.Path(__file__).parents[1].joinpath('sql')
     JINJA_ENV = Environment(loader=FileSystemLoader(SQL_DIR))
-
-    view_template_01 = SQL_DIR.joinpath('01_initial_cleaning_template.sql.j2')
-
-    view_templates_01 = [
-        TemplatedViewQuery(
-            env=JINJA_ENV,
-            template=view_template_01,
-            view_name='airline_data.train_cleaned',
-            source_table='airline_data.train_raw',
+    TEMPLATE_CONFIGS = [
+        TemplateConfigFactory(
+            datasets=['train', 'test'],
+            versions=1,
+            template_name='01_initial_cleaning_template.sql.j2',
+            view_name='{dataset}_cleaned',
+            source_table='{dataset}_raw',
         ),
-        TemplatedViewQuery(
-            env=JINJA_ENV,
-            template=view_template_01,
-            view_name='airline_data.test_cleaned',
-            source_table='airline_data.test_raw',
+        TemplateConfigFactory(
+            datasets=['train', 'test'],
+            versions=2,
+            template_name='02_features_v{version}_template.sql.j2',
+            view_name='{dataset}_features_v{version}',
+            source_table='{dataset}_cleaned',
         ),
     ]
 
-    execute_queries(view_templates_01)
+    view_templates = [
+        TemplatedViewQuery(
+            env=JINJA_ENV,
+            template=SQL_DIR.joinpath(info.template_name),
+            view_name=f'airline_data.{info.view_name}',
+            source_table=f'airline_data.{info.source_table}',
+        )
+        for config in TEMPLATE_CONFIGS
+        for info in config.get_template_info()
+    ]
+
+    execute_queries(view_templates)

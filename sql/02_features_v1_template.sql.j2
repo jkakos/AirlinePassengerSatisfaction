@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW {{ view_name }} AS
+SELECT
+    * EXCEPT (id, gender)
+FROM {{ source_table }};

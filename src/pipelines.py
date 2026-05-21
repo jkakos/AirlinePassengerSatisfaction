@@ -89,6 +89,9 @@ def plot_model_shap_values(X, clf, sample_size=5000, max_display=22):
     explainer = shap.Explainer(clf_model, X_sample)
     shap_values = explainer(X_sample)
 
+    # Clean up feature names to be more readable in the figures
+    shap_values.feature_names = format_feature_names(shap_values.feature_names)
+
     _, ax = plt.subplots(figsize=(10, 8))
     shap.plots.bar(shap_values, max_display=max_display, ax=ax)
 
@@ -106,3 +109,22 @@ def plot_model_shap_values(X, clf, sample_size=5000, max_display=22):
     plt.show()
 
     return shap_values
+
+
+def format_feature_names(feature_names: list[str]) -> list[str]:
+    """
+    Format feature names from the preprocessor to be more readable for SHAP
+    plots.
+
+    """
+    formatted_names = []
+    for name in feature_names:
+        if name.startswith('num__'):
+            formatted_names.append(name.replace('num__', ''))
+        elif name.startswith('cat__'):
+            s = name.replace('cat__', '').rsplit('_', maxsplit=1)
+            formatted_names.append(f'{s[0]} ({s[1]})')
+        else:
+            formatted_names.append(name)
+
+    return formatted_names

@@ -79,12 +79,13 @@ class TemplateConfigFactory:
 class SQLQueryProvider(Protocol):
     def get_query(self) -> str: ...
 
+    def message(self) -> str: ...
+
 
 class TemplatedViewQuery(SQLQueryProvider):
     """
     SQL query provider that generates a view creation query based on a Jinja2
-    template. The Jinja2 environment, path to the template file, name of the
-    view to be created, and source table used in the view must be provided.
+    template.
 
     """
 
@@ -101,12 +102,26 @@ class TemplatedViewQuery(SQLQueryProvider):
         self.source_table = source_table
 
     def get_query(self) -> str:
+        """
+        Render a Jinja2 template and return the query string.
+
+        """
         template_file = self.template.name
         jinja_template = self.env.get_template(template_file)
 
         return jinja_template.render(
             view_name=self.view_name, source_table=self.source_table
         )
+
+    def message(self) -> str:
+        """
+        Print a message noting the current query being sent.
+
+        """
+        template_parent = self.template.parent.name
+        template_name = self.template.stem.split('.')[0]
+
+        return f'Executing: {template_parent}/{template_name} -> view: {self.view_name}'
 
 
 def execute_queries(query_providers: Sequence[SQLQueryProvider]) -> None:

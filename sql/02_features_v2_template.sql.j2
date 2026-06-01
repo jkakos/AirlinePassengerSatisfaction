@@ -1,12 +1,55 @@
-CREATE OR REPLACE VIEW {{ view_name }} AS
-SELECT
-    * EXCEPT (id, gender, departure_delay, class, wifi_service)
-    , CASE
-        WHEN wifi_service = 0 THEN 3
-        ELSE wifi_service
-    END AS wifi_service
-    , CASE
-        WHEN class = 'Business' THEN 1
-        ELSE 0
-    END AS is_business_class
-FROM {{ source_table }};
+DECLARE cols_to_drop ARRAY<STRING>;
+DECLARE cols_to_transform_zero_to_three ARRAY<STRING>;
+DECLARE except_str STRING;
+DECLARE zero_to_three_case_str STRING;
+
+SET cols_to_drop = [
+    'age'
+    , 'class'
+    , 'departure_delay'
+    , 'flight_distance'
+    , 'food_drink'
+    , 'gate_location'
+    , 'gender'
+    , 'id'
+    , 'online_booking_ease'
+];
+SET cols_to_transform_zero_to_three = [
+    'baggage_handling'
+    , 'checkin_service'
+    , 'cleanliness'
+    , 'convenient_time'
+    , 'inflight_entertainment'
+    , 'inflight_service'
+    , 'leg_room'
+    , 'onboard_service'
+    , 'online_boarding'
+    , 'seat_comfort'
+    , 'wifi_service'
+];
+SET except_str = (
+    SELECT STRING_AGG(col, ', ')
+    FROM UNNEST(ARRAY_CONCAT(cols_to_drop, cols_to_transform_zero_to_three)) AS col
+);
+SET zero_to_three_case_str = (
+    SELECT STRING_AGG(
+        FORMAT('CASE WHEN %s = 0 THEN 3 ELSE %s END AS %s', col, col, col),
+        ',\n'
+    )
+    FROM UNNEST(cols_to_transform_zero_to_three) AS col
+);
+
+EXECUTE IMMEDIATE FORMAT(
+    """
+    CREATE OR REPLACE VIEW {{ view_name }} AS
+    SELECT
+        * EXCEPT (%s)
+        , %s
+        , CASE
+            WHEN class = 'Business' THEN 1
+            ELSE 0
+        END AS is_business_class
+    FROM {{ source_table }};
+    """,
+    except_str, zero_to_three_case_str
+);

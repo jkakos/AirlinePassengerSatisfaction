@@ -1,11 +1,19 @@
 import lightgbm as lgb
+import optuna
+import pandas as pd
 import xgboost as xgb
+from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
 
 
-def model_from_optuna(study, preprocessor, X, y):
+def model_from_optuna(
+    study: optuna.study.Study,
+    preprocessor: ColumnTransformer,
+    X: pd.DataFrame,
+    y: pd.Series,
+) -> Pipeline:
     """
     Use the best parameters from an Optuna study to create a model.
     This assumes that there are three model types: RandomForest,
@@ -34,14 +42,17 @@ def model_from_optuna(study, preprocessor, X, y):
     return clf
 
 
-def objective(trial, X, y, preprocessor):
+def objective(
+    trial: optuna.trial.Trial,
+    X: pd.DataFrame,
+    y: pd.Series,
+    preprocessor: ColumnTransformer,
+) -> float:
     """
     Initial objective function for optuna.
 
     """
-    classifier_name = trial.suggest_categorical(
-        'classifier', ['RandomForest', 'XGBoost', 'LightGBM']
-    )
+    classifier_name = trial.suggest_categorical('classifier', ['LightGBM'])
 
     if classifier_name == 'RandomForest':
         params = {
@@ -49,7 +60,7 @@ def objective(trial, X, y, preprocessor):
             'max_depth': trial.suggest_int('max_depth', 4, 15),
             'min_samples_split': trial.suggest_int('min_samples_split', 2, 20),
         }
-        model = RandomForestClassifier(**params, random_state=99)
+        model = RandomForestClassifier(**params, random_state=99)  # type: ignore
     elif classifier_name == 'XGBoost':
         params = {
             'n_estimators': trial.suggest_int('n_estimators', 50, 300),
@@ -67,21 +78,24 @@ def objective(trial, X, y, preprocessor):
         }
         model = lgb.LGBMClassifier(**params, verbose=-1, random_state=99)
 
-    pipeline = Pipeline([('pre', preprocessor), ('model', model)])
+    pipeline = Pipeline([('preprocessor', preprocessor), ('model', model)])
     score = cross_val_score(pipeline, X, y, cv=5, scoring='roc_auc').mean()
 
     return score
 
 
-def objective_restricted(trial, X, y, preprocessor):
+def objective_restricted(
+    trial: optuna.trial.Trial,
+    X: pd.DataFrame,
+    y: pd.Series,
+    preprocessor: ColumnTransformer,
+) -> float:
     """
     Objective function for optuna with more restricted hyperparameter ranges
     to reduce overfitting.
 
     """
-    classifier_name = trial.suggest_categorical(
-        'classifier', ['RandomForest', 'XGBoost', 'LightGBM']
-    )
+    classifier_name = trial.suggest_categorical('classifier', ['LightGBM'])
 
     if classifier_name == 'RandomForest':
         params = {
@@ -89,7 +103,7 @@ def objective_restricted(trial, X, y, preprocessor):
             'max_depth': trial.suggest_int('max_depth', 3, 6),
             'min_samples_leaf': trial.suggest_int('min_samples_leaf', 20, 50),
         }
-        model = RandomForestClassifier(**params, random_state=99)
+        model = RandomForestClassifier(**params, random_state=99)  # type: ignore
     elif classifier_name == 'XGBoost':
         params = {
             'n_estimators': trial.suggest_int('n_estimators', 50, 300),
@@ -108,7 +122,7 @@ def objective_restricted(trial, X, y, preprocessor):
         }
         model = lgb.LGBMClassifier(**params, verbose=-1, random_state=99)
 
-    pipeline = Pipeline([('pre', preprocessor), ('model', model)])
+    pipeline = Pipeline([('preprocessor', preprocessor), ('model', model)])
     score = cross_val_score(pipeline, X, y, cv=5, scoring='roc_auc').mean()
 
     return score

@@ -2,9 +2,15 @@ CREATE OR REPLACE VIEW {{ view_name }} AS
 SELECT
     `id`
     , `Gender` AS gender
-    , `Customer Type` AS customer_type
+    , CASE
+        WHEN `Customer Type` = 'Loyal Customer' THEN 1
+        ELSE 0
+    END AS is_loyal_customer
     , `Age` AS age
-    , `Type of Travel` AS travel_type
+    , CASE
+        WHEN `Type of Travel` = 'Personal Travel' THEN 1
+        ELSE 0
+    END AS is_personal_travel
     , `Class` AS class
     , `Flight Distance` AS flight_distance
     , `Inflight wifi service` AS wifi_service

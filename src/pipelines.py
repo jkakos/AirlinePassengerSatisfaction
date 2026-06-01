@@ -1,3 +1,8 @@
+"""
+This file contains a number of wrapper functions for simplifying the code
+used in the modeling notebook.
+
+"""
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np

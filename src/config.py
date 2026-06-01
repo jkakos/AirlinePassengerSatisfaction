@@ -3,9 +3,9 @@ PROJECT_ID = 'project-e18491ab-d50e-4c36-a7d'
 DTYPE_MAP = {
     'id': 'int64',
     'gender': 'str',
-    'customer_type': 'str',
+    'is_loyal_customer': 'int64',
     'age': 'int64',
-    'travel_type': 'str',
+    'is_personal_travel': 'int64',
     'class': 'str',
     'flight_distance': 'int64',
     'wifi_service': 'int64',
@@ -24,11 +24,15 @@ DTYPE_MAP = {
     'cleanliness': 'int64',
     'departure_delay': 'int64',
     'arrival_delay': 'int64',
+    # Engineered features ---------
+    'is_business_class': 'int64',
+    'cabin_rating': 'float64',
+    'service_rating': 'float64',
     'satisfied': 'int64',
 }
 
 NUMERIC_COLS = ['age', 'flight_distance', 'departure_delay', 'arrival_delay']
-CATEGORICAL_COLS = ['gender', 'customer_type', 'travel_type', 'class']
+CATEGORICAL_COLS = ['gender', 'is_loyal_customer', 'is_personal_travel', 'class']
 
 # These columns are all ratings from 0-5 or 1-5
 RATED_COLS = [
@@ -49,3 +53,15 @@ RATED_COLS = [
 ]
 
 TARGET = 'satisfied'
+
+
+def set_dtypes(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Set the data dtypes according to the DTYPE_MAP. Only applies to columns
+    that are present in both the DTYPE_MAP and the dataframe.
+
+    """
+    active_dtypes = {
+        col: dtype for (col, dtype) in DTYPE_MAP.items() if col in df.columns
+    }
+    return df.astype(active_dtypes)

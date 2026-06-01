@@ -1,0 +1,82 @@
+DECLARE cols_to_drop ARRAY<STRING>;
+DECLARE cols_to_transform_zero_to_three ARRAY<STRING>;
+DECLARE except_str_cte STRING;
+DECLARE except_str STRING;
+DECLARE zero_to_three_case_str STRING;
+
+SET cols_to_drop = [
+    'age'
+    , 'arrival_delay'
+    , 'baggage_handling'
+    , 'checkin_service'
+    , 'class'
+    , 'cleanliness'
+    , 'convenient_time'
+    , 'departure_delay'
+    , 'flight_distance'
+    , 'food_drink'
+    , 'gate_location'
+    , 'gender'
+    , 'id'
+    , 'inflight_entertainment'
+    , 'inflight_service'
+    , 'leg_room'
+    , 'onboard_service'
+    , 'online_booking_ease'
+    , 'seat_comfort'
+];
+SET cols_to_transform_zero_to_three = [
+    'baggage_handling'
+    , 'checkin_service'
+    , 'cleanliness'
+    , 'inflight_entertainment'
+    , 'inflight_service'
+    , 'leg_room'
+    , 'onboard_service'
+    , 'online_boarding'
+    , 'seat_comfort'
+    , 'wifi_service'
+];
+SET except_str_cte = (
+    SELECT STRING_AGG(col, ', ')
+    FROM UNNEST(cols_to_transform_zero_to_three) AS col
+);
+SET except_str = (
+    SELECT STRING_AGG(col, ', ')
+    FROM UNNEST(cols_to_drop) AS col
+);
+SET zero_to_three_case_str = (
+    SELECT STRING_AGG(
+        FORMAT('CASE WHEN %s = 0 THEN 3 ELSE %s END AS %s', col, col, col),
+        ',\n'
+    )
+    FROM UNNEST(cols_to_transform_zero_to_three) AS col
+);
+
+EXECUTE IMMEDIATE FORMAT(
+    """
+    CREATE OR REPLACE VIEW {{ view_name }} AS
+    WITH transformed_base AS (
+        SELECT
+            * EXCEPT (%s)
+            , %s
+            , CASE
+                WHEN class = 'Business' THEN 1
+                ELSE 0
+            END AS is_business_class
+        FROM {{ source_table }}
+    )
+    SELECT
+        * EXCEPT (%s)
+        , (SELECT AVG(rating) FROM UNNEST(
+                [seat_comfort, inflight_entertainment, leg_room, cleanliness]
+            ) AS rating
+        ) AS cabin_rating
+        , (SELECT AVG(rating) FROM UNNEST(
+                [baggage_handling, inflight_service, checkin_service, onboard_service]
+            ) AS rating
+        ) AS service_rating
+    FROM transformed_base;
+    """,
+    except_str_cte, zero_to_three_case_str, except_str
+);

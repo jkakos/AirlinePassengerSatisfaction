@@ -124,7 +124,9 @@ class TemplatedViewQuery(SQLQueryProvider):
         return f'Executing: {template_parent}/{template_name} -> view: {self.view_name}'
 
 
-def execute_queries(query_providers: Sequence[SQLQueryProvider]) -> None:
+def execute_queries(
+    query_providers: Sequence[SQLQueryProvider], verbose: bool = True
+) -> None:
     """
     Execute queries to BigQuery by running the SQL files contained within
     each query provider.
@@ -133,6 +135,9 @@ def execute_queries(query_providers: Sequence[SQLQueryProvider]) -> None:
     client = bigquery.Client(project=config.PROJECT_ID)
 
     for provider in query_providers:
+        if verbose:
+            print(provider.message())
+
         query = provider.get_query()
         query_job = client.query(query)
         query_job.result()  # wait for the view to be created

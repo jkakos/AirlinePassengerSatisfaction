@@ -6,7 +6,7 @@ from typing import Iterator, Protocol, Sequence
 from google.cloud import bigquery
 from jinja2 import Environment, FileSystemLoader
 
-import db_config
+from src import db_config
 
 
 class SQLQueryProvider(Protocol):
@@ -119,6 +119,7 @@ def execute_queries(
 
 if __name__ == '__main__':
     SQL_DIR = pathlib.Path(__file__).parents[1].joinpath('sql')
+    SQL_DIR.mkdir(parents=True, exist_ok=True)
     JINJA_ENV = Environment(loader=FileSystemLoader(SQL_DIR))
     STAGES = db_config.ProjectStage
     TEMPLATES = db_config.SQL_TEMPLATES

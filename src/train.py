@@ -1,6 +1,4 @@
 import joblib
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from src import model, pipelines
 from src.db_config import DatasetSplit

@@ -84,7 +84,7 @@ def get_model_features(
     drop_cols: list[str] = [],
     add_num_cols: list[str] = [],
     add_cat_cols: list[str] = [],
-    untransformed_features: list[str] = [],
+    passthrough_cols: list[str] = [],
 ) -> tuple[list[str], list[str]]:
     """
     Get the updated numeric and categorical features that will passed through
@@ -94,12 +94,12 @@ def get_model_features(
     numeric_features = [
         col
         for col in (config.NUMERIC_COLS + config.RATED_COLS + add_num_cols)
-        if col not in (drop_cols + untransformed_features)
+        if col not in (drop_cols + passthrough_cols)
     ]
     categorical_features = [
         col
         for col in (config.CATEGORICAL_COLS + add_cat_cols)
-        if col not in (drop_cols + untransformed_features)
+        if col not in (drop_cols + passthrough_cols)
     ]
     return numeric_features, categorical_features
 
@@ -111,7 +111,7 @@ def run_model(
     obj_fn: Callable,
     numeric_features: list[str] | None = None,
     categorical_features: list[str] | None = None,
-    untransformed_features: list[str] | None = None,
+    passthrough_cols: list[str] | None = None,
     n_trials: int = 10,
 ) -> ExperimentResult:
     """
@@ -119,10 +119,10 @@ def run_model(
     hyperparameters for the model.
 
     """
-    if not any([numeric_features, categorical_features, untransformed_features]):
+    if not any([numeric_features, categorical_features, passthrough_cols]):
         raise ValueError('No features were given.')
 
-    feature_lists = [numeric_features, categorical_features, untransformed_features]
+    feature_lists = [numeric_features, categorical_features, passthrough_cols]
     features = [
         feature
         for feature_list in feature_lists

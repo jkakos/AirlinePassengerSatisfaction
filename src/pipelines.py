@@ -20,7 +20,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from src import config, model, scoring
+from src import db_config, model, model_config, scoring
 from src import inspection as insp
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)  # hide optuna's print statements
@@ -63,7 +63,7 @@ def query_data(client: bigquery.Client, query: str) -> pd.DataFrame:
 
     """
     df = client.query(query).to_dataframe()
-    df = config.set_dtypes(df)
+    df = model_config.set_dtypes(df)
 
     return df
 
@@ -73,7 +73,7 @@ def load_data(train_table: str, test_table: str) -> tuple[pd.DataFrame, pd.DataF
     Query the training and test data from BigQuery.
 
     """
-    client = bigquery.Client(project=config.PROJECT_ID)
+    client = bigquery.Client(project=db_config.PROJECT_ID)
     train_data = query_data(client, f'SELECT * FROM {train_table}')
     test_data = query_data(client, f'SELECT * FROM {test_table}')
 
@@ -93,12 +93,12 @@ def get_model_features(
     """
     numeric_features = [
         col
-        for col in (config.NUMERIC_COLS + config.RATED_COLS + add_num_cols)
+        for col in (model_config.NUMERIC_COLS + model_config.RATED_COLS + add_num_cols)
         if col not in (drop_cols + passthrough_cols)
     ]
     categorical_features = [
         col
-        for col in (config.CATEGORICAL_COLS + add_cat_cols)
+        for col in (model_config.CATEGORICAL_COLS + add_cat_cols)
         if col not in (drop_cols + passthrough_cols)
     ]
     return numeric_features, categorical_features
@@ -403,7 +403,7 @@ def save_figures(
 
 def save_wifi_zero_breakdown_plot(data: pd.DataFrame, path: pathlib.Path) -> None:
     wifi_zero_df = data[data['wifi_service'] == 0]
-    features = [config.TARGET, 'is_personal_travel', 'class', 'is_loyal_customer']
+    features = [model_config.TARGET, 'is_personal_travel', 'class', 'is_loyal_customer']
     colors = ['tab:blue', 'tab:orange', 'tab:purple']
     fig, ax = plt.subplots(figsize=(8, 4), constrained_layout=True)
 

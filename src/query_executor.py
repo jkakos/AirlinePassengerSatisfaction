@@ -6,7 +6,7 @@ from typing import Iterator, Protocol, Sequence
 from google.cloud import bigquery
 from jinja2 import Environment, FileSystemLoader
 
-import config
+import db_config
 
 
 class SQLQueryProvider(Protocol):
@@ -106,7 +106,7 @@ def execute_queries(
     each query provider.
 
     """
-    client = bigquery.Client(project=config.PROJECT_ID)
+    client = bigquery.Client(project=db_config.PROJECT_ID)
 
     for provider in query_providers:
         if verbose:
@@ -120,14 +120,14 @@ def execute_queries(
 if __name__ == '__main__':
     SQL_DIR = pathlib.Path(__file__).parents[1].joinpath('sql')
     JINJA_ENV = Environment(loader=FileSystemLoader(SQL_DIR))
-    STAGES = config.ProjectStage
-    TEMPLATES = config.SQL_TEMPLATES
-    TABLE_NAMES = config.SQL_TABLE_NAMES
-    VERSIONS = config.SQL_TEMPLATE_VERSIONS
-    SPLITS = config.DATASET_SPLITS
+    STAGES = db_config.ProjectStage
+    TEMPLATES = db_config.SQL_TEMPLATES
+    TABLE_NAMES = db_config.SQL_TABLE_NAMES
+    VERSIONS = db_config.SQL_TEMPLATE_VERSIONS
+    SPLITS = db_config.DATASET_SPLITS
 
     make_templates = partial(
-        generate_templates, env=JINJA_ENV, dataset_location=config.DATASET_LOCATION
+        generate_templates, env=JINJA_ENV, dataset_location=db_config.DATASET_LOCATION
     )
 
     # Generate the SQL queries used to make new views in BigQuery

@@ -103,6 +103,31 @@ def get_model_features(
     return numeric_features, categorical_features, profile.passthrough_cols
 
 
+def get_pipeline_preprocessor(
+    numeric_features, categorical_features
+) -> ColumnTransformer:
+    """
+    Set up the ColumnTransformer preprocessor for the model pipeline.
+
+    """
+    transformers = []
+    if numeric_features:
+        transformers.append(('num', StandardScaler(), numeric_features))
+    if categorical_features:
+        transformers.append(
+            (
+                'cat',
+                OneHotEncoder(drop='if_binary', sparse_output=False),
+                categorical_features,
+            )
+        )
+
+    preprocessor = ColumnTransformer(transformers=transformers, remainder='passthrough')
+    preprocessor.set_output(transform='pandas')
+
+    return preprocessor
+
+
 def run_model(
     model_version: model_config.ModelVersion,
     df: pd.DataFrame,
@@ -130,20 +155,7 @@ def run_model(
     X_test = df_test[features]
     y_test = df_test[target]
 
-    transformers = []
-    if numeric_features:
-        transformers.append(('num', StandardScaler(), numeric_features))
-    if categorical_features:
-        transformers.append(
-            (
-                'cat',
-                OneHotEncoder(drop='if_binary', sparse_output=False),
-                categorical_features,
-            )
-        )
-
-    preprocessor = ColumnTransformer(transformers=transformers, remainder='passthrough')
-    preprocessor.set_output(transform='pandas')
+    preprocessor = get_pipeline_preprocessor(numeric_features, categorical_features)
     objective_fn = lambda trial: obj_fn(trial, X, y, preprocessor)
     study_sampler = TPESampler(seed=256)
     study = optuna.create_study(direction='maximize', sampler=study_sampler)

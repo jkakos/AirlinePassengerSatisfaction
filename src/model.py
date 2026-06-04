@@ -5,6 +5,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
 
+SEED = 99
+
 
 def model_from_optuna(
     study: optuna.study.Study,
@@ -19,7 +21,7 @@ def model_from_optuna(
 
     """
     params = {k: v for (k, v) in study.best_params.items() if k != 'classifier'}
-    classifier = lgb.LGBMClassifier(**params, verbose=-1, random_state=99)
+    classifier = lgb.LGBMClassifier(**params, verbose=-1, random_state=SEED)
 
     clf = Pipeline(
         [
@@ -48,7 +50,7 @@ def objective(
         'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.2, log=True),
         'num_leaves': trial.suggest_int('num_leaves', 20, 150),
     }
-    model = lgb.LGBMClassifier(**params, verbose=-1, random_state=99)
+    model = lgb.LGBMClassifier(**params, verbose=-1, random_state=SEED)
     pipeline = Pipeline([('preprocessor', preprocessor), ('model', model)])
     score = cross_val_score(pipeline, X, y, cv=5, scoring='roc_auc').mean()
 
@@ -73,7 +75,7 @@ def objective_restricted(
         'num_leaves': trial.suggest_int('num_leaves', 20, 50),
         'min_child_samples': trial.suggest_int('min_child_samples', 20, 50),
     }
-    model = lgb.LGBMClassifier(**params, verbose=-1, random_state=99)
+    model = lgb.LGBMClassifier(**params, verbose=-1, random_state=SEED)
     pipeline = Pipeline([('preprocessor', preprocessor), ('model', model)])
     score = cross_val_score(pipeline, X, y, cv=5, scoring='roc_auc').mean()
 

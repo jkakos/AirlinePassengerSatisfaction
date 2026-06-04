@@ -1,5 +1,7 @@
+import pathlib
 from dataclasses import dataclass, field
 from enum import Enum
+
 import pandas as pd
 from src.db_config import ProjectStage, DatasetSplit, build_table_name
 
@@ -70,6 +72,7 @@ def set_dtypes(df: pd.DataFrame) -> pd.DataFrame:
     return df.astype(active_dtypes)
 
 
+MODELS_DIR = pathlib.Path(__file__).parents[1].joinpath('models')
 DTYPE_MAP = {
     'id': 'int64',
     'gender': 'str',

@@ -1,5 +1,6 @@
 .venv/
 .vscode/
 data/
+models/
 __pycache__/
 notes.md

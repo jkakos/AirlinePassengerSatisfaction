@@ -1,3 +1,5 @@
+from typing import Any
+
 import lightgbm as lgb
 import optuna
 import pandas as pd
@@ -8,21 +10,17 @@ from sklearn.pipeline import Pipeline
 SEED = 99
 
 
-def model_from_optuna(
-    study: optuna.study.Study,
+def model_from_hyperparams(
+    hyperparams: dict[str, Any],
     preprocessor: ColumnTransformer,
     X: pd.DataFrame,
     y: pd.Series,
 ) -> Pipeline:
     """
-    Use the best parameters from an Optuna study to create a model.
-    This assumes that there are three model types: RandomForest,
-    XGBoost, and LightGBM classifiers.
+    Create a model from a given set of hyperparameters.
 
     """
-    params = {k: v for (k, v) in study.best_params.items() if k != 'classifier'}
-    classifier = lgb.LGBMClassifier(**params, verbose=-1, random_state=SEED)
-
+    classifier = lgb.LGBMClassifier(**hyperparams, verbose=-1, random_state=SEED)
     clf = Pipeline(
         [
             ('preprocessor', preprocessor),
@@ -32,6 +30,20 @@ def model_from_optuna(
     clf.fit(X, y)
 
     return clf
+
+
+def model_from_optuna(
+    study: optuna.study.Study,
+    preprocessor: ColumnTransformer,
+    X: pd.DataFrame,
+    y: pd.Series,
+) -> Pipeline:
+    """
+    Use the best hyperparameters from an Optuna study to create a model.
+
+    """
+    params = {k: v for (k, v) in study.best_params.items() if k != 'classifier'}
+    return model_from_hyperparams(params, preprocessor, X, y)
 
 
 def objective(

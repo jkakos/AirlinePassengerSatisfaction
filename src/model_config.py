@@ -4,6 +4,21 @@ import pandas as pd
 from src.db_config import ProjectStage, DatasetSplit, build_table_name
 
 
+@dataclass
+class FeatureProfile:
+    """
+    Store the features that will be dropped or added for a model version.
+    These are separated into numeric, categorical, and passthrough features
+    for processing through a ColumnTransformer.
+
+    """
+
+    drop_cols: list[str] = field(default_factory=list)
+    add_num_cols: list[str] = field(default_factory=list)
+    add_cat_cols: list[str] = field(default_factory=list)
+    passthrough_cols: list[str] = field(default_factory=list)
+
+
 class ModelVersion(Enum):
     """
     Store model versions and the corresponding information regarding the
@@ -26,6 +41,14 @@ class ModelVersion(Enum):
         self.version_str = version_str
         self.stage = stage
         self.sql_version = sql_version
+
+    @property
+    def feature_profile(self) -> FeatureProfile:
+        """
+        Get the feature profile for a model version.
+
+        """
+        return _FEATURE_REGISTRY[self]
 
     def get_table_name(self, dataset: DatasetSplit) -> str:
         """
@@ -98,3 +121,86 @@ RATED_COLS = [
     'inflight_service',
     'cleanliness',
 ]
+
+_FEATURE_REGISTRY = {
+    ModelVersion.V1_0: FeatureProfile(
+        drop_cols=['gender'],
+        passthrough_cols=['is_loyal_customer', 'is_personal_travel'],
+    ),
+    ModelVersion.V1_1: FeatureProfile(
+        drop_cols=['gender'],
+        passthrough_cols=['is_loyal_customer', 'is_personal_travel'],
+    ),
+    ModelVersion.V2_0: FeatureProfile(
+        drop_cols=[
+            'age',
+            'class',
+            'departure_delay',
+            'flight_distance',
+            'food_drink',
+            'gate_location',
+            'gender',
+            'online_booking_ease',
+        ],
+        passthrough_cols=[
+            'is_loyal_customer',
+            'is_personal_travel',
+            'is_business_class',
+        ],
+    ),
+    ModelVersion.V2_1: FeatureProfile(
+        drop_cols=[
+            'age',
+            'class',
+            'baggage_handling',
+            'checkin_service',
+            'cleanliness',
+            'convenient_time',
+            'departure_delay',
+            'flight_distance',
+            'food_drink',
+            'gate_location',
+            'gender',
+            'online_booking_ease',
+            'inflight_entertainment',
+            'inflight_service',
+            'leg_room',
+            'onboard_service',
+            'seat_comfort',
+        ],
+        add_num_cols=['cabin_rating', 'service_rating'],
+        passthrough_cols=[
+            'is_loyal_customer',
+            'is_personal_travel',
+            'is_business_class',
+        ],
+    ),
+    ModelVersion.V3_0: FeatureProfile(
+        drop_cols=[
+            'age',
+            'arrival_delay',
+            'baggage_handling',
+            'checkin_service',
+            'class',
+            'cleanliness',
+            'convenient_time',
+            'departure_delay',
+            'flight_distance',
+            'food_drink',
+            'gate_location',
+            'gender',
+            'inflight_entertainment',
+            'inflight_service',
+            'leg_room',
+            'onboard_service',
+            'online_booking_ease',
+            'seat_comfort',
+        ],
+        add_num_cols=['cabin_rating', 'service_rating'],
+        passthrough_cols=[
+            'is_business_class',
+            'is_loyal_customer',
+            'is_personal_travel',
+        ],
+    ),
+}

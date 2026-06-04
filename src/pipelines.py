@@ -81,11 +81,8 @@ def load_data(train_table: str, test_table: str) -> tuple[pd.DataFrame, pd.DataF
 
 
 def get_model_features(
-    drop_cols: list[str] = [],
-    add_num_cols: list[str] = [],
-    add_cat_cols: list[str] = [],
-    passthrough_cols: list[str] = [],
-) -> tuple[list[str], list[str]]:
+    profile: model_config.FeatureProfile,
+) -> tuple[list[str], list[str], list[str]]:
     """
     Get the updated numeric and categorical features that will passed through
     the model preprocessor.
@@ -93,25 +90,25 @@ def get_model_features(
     """
     numeric_features = [
         col
-        for col in (model_config.NUMERIC_COLS + model_config.RATED_COLS + add_num_cols)
-        if col not in (drop_cols + passthrough_cols)
+        for col in (
+            model_config.NUMERIC_COLS + model_config.RATED_COLS + profile.add_num_cols
+        )
+        if col not in (profile.drop_cols + profile.passthrough_cols)
     ]
     categorical_features = [
         col
-        for col in (model_config.CATEGORICAL_COLS + add_cat_cols)
-        if col not in (drop_cols + passthrough_cols)
+        for col in (model_config.CATEGORICAL_COLS + profile.add_cat_cols)
+        if col not in (profile.drop_cols + profile.passthrough_cols)
     ]
-    return numeric_features, categorical_features
+    return numeric_features, categorical_features, profile.passthrough_cols
 
 
 def run_model(
+    model_version: model_config.ModelVersion,
     df: pd.DataFrame,
     df_test: pd.DataFrame,
     target: str,
     obj_fn: Callable,
-    numeric_features: list[str] | None = None,
-    categorical_features: list[str] | None = None,
-    passthrough_cols: list[str] | None = None,
     n_trials: int = 10,
 ) -> ExperimentResult:
     """
@@ -119,26 +116,24 @@ def run_model(
     hyperparameters for the model.
 
     """
-    if not any([numeric_features, categorical_features, passthrough_cols]):
+    numeric_features, categorical_features, passthrough_features = get_model_features(
+        model_version.feature_profile
+    )
+
+    if not any([numeric_features, categorical_features, passthrough_features]):
         raise ValueError('No features were given.')
 
-    feature_lists = [numeric_features, categorical_features, passthrough_cols]
-    features = [
-        feature
-        for feature_list in feature_lists
-        if feature_list is not None
-        for feature in feature_list
-    ]
+    features = [*numeric_features, *categorical_features, *passthrough_features]
+
     X = df[features]
     y = df[target]
-
     X_test = df_test[features]
     y_test = df_test[target]
 
     transformers = []
-    if numeric_features is not None:
+    if numeric_features:
         transformers.append(('num', StandardScaler(), numeric_features))
-    if categorical_features is not None:
+    if categorical_features:
         transformers.append(
             (
                 'cat',
@@ -153,14 +148,8 @@ def run_model(
     study_sampler = TPESampler(seed=256)
     study = optuna.create_study(direction='maximize', sampler=study_sampler)
     study.optimize(objective_fn, n_trials=n_trials, show_progress_bar=True)
-
-    # print('Best Hyperparameters:')
-    # for k, v in study.best_params.items():
-    #     print(f'{k:<20} {v:>10.4f}' if isinstance(v, float) else f'{k:<20} {v:>10}')
-
-    # print(f'\nBest Score: {study.best_value:.4f}')
-
     clf = model.model_from_optuna(study, preprocessor, X, y)
+
     return ExperimentResult(X, y, X_test, y_test, clf, study, preprocessor)
 
 

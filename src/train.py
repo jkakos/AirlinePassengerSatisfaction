@@ -6,6 +6,11 @@ from src.model_config import MODELS_DIR, ModelVersion, TARGET
 
 
 def main(model_version: ModelVersion, hyperparams: dict[str, float]) -> None:
+    """
+    Train and store a model given a model version and a set
+    of hyperparameters.
+
+    """
     data, _ = pipelines.load_data(
         train_table=model_version.get_table_name(DatasetSplit.TRAIN),
         test_table=model_version.get_table_name(DatasetSplit.TEST),

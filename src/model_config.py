@@ -6,6 +6,46 @@ import pandas as pd
 from src.db_config import ProjectStage, DatasetSplit, build_table_name
 
 
+class OptimizationProfile:
+    """
+    Store optimization parameters for an optuna study.
+
+    """
+
+    N_TRIALS: int = 10
+    SEED: int = 256
+    SCORING: str = 'roc_auc'
+
+
+class HyperparamProfile(Enum):
+    """
+    Store the hyperparameter search space for an optuna study.
+
+    """
+
+    WIDE = {
+        'n_estimators': {'type': 'int', 'bounds': (50, 300)},
+        'max_depth': {'type': 'int', 'bounds': (3, 10)},
+        'learning_rate': {
+            'type': 'float',
+            'bounds': (0.01, 0.2),
+            'kwargs': {'log': True},
+        },
+        'num_leaves': {'type': 'int', 'bounds': (20, 150)},
+    }
+    RESTRICTED = {
+        'n_estimators': {'type': 'int', 'bounds': (50, 300)},
+        'max_depth': {'type': 'int', 'bounds': (3, 6)},
+        'learning_rate': {
+            'type': 'float',
+            'bounds': (0.01, 0.2),
+            'kwargs': {'log': True},
+        },
+        'num_leaves': {'type': 'int', 'bounds': (20, 50)},
+        'min_child_samples': {'type': 'int', 'bounds': (20, 50)},
+    }
+
+
 @dataclass
 class FeatureProfile:
     """

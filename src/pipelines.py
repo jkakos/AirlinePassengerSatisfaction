@@ -133,8 +133,6 @@ def run_model(
     df: pd.DataFrame,
     df_test: pd.DataFrame,
     target: str,
-    obj_fn: Callable,
-    n_trials: int = 10,
 ) -> ExperimentResult:
     """
     Preprocess features and run an optuna study to find the best
@@ -155,9 +153,14 @@ def run_model(
     X_test = df_test[features]
     y_test = df_test[target]
 
+    seed = model_config.OptimizationProfile.SEED
+    n_trials = model_config.OptimizationProfile.N_TRIALS
+
     preprocessor = get_pipeline_preprocessor(numeric_features, categorical_features)
-    objective_fn = lambda trial: obj_fn(trial, X, y, preprocessor)
-    study_sampler = TPESampler(seed=256)
+    objective_fn = lambda trial: model.objective(
+        trial, X, y, preprocessor, model_version.hyperparam_profile
+    )
+    study_sampler = TPESampler(seed=seed)
     study = optuna.create_study(direction='maximize', sampler=study_sampler)
     study.optimize(objective_fn, n_trials=n_trials, show_progress_bar=True)
     clf = model.model_from_optuna(study, preprocessor, X, y)

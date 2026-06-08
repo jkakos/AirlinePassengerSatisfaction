@@ -3,11 +3,11 @@ dython==0.7.12
 google-cloud-bigquery==3.41.0
 Jinja2==3.1.6
 lightgbm==4.6.0
-matplotlib==3.10.9
-numpy==2.4.6
+matplotlib==3.10.8
+numpy==2.4.2
 optuna==4.7.0
-pandas==3.0.3
+pandas==2.3.3
 pyarrow==24.0.0
-scikit_learn==1.9.0
+scikit_learn==1.8.0
 seaborn==0.13.2
 shap==0.50.0

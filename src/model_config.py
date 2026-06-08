@@ -68,21 +68,23 @@ class ModelVersion(Enum):
 
     """
 
-    V1_0 = ('v1.0', ProjectStage.FEATURE_ENG, 1)
-    V1_1 = ('v1.1', ProjectStage.FEATURE_ENG, 1)
-    V2_0 = ('v2.0', ProjectStage.FEATURE_ENG, 2)
-    V2_1 = ('v2.1', ProjectStage.FEATURE_ENG, 3)
-    V3_0 = ('v3.0', ProjectStage.FEATURE_ENG, 4)
+    V1_0 = ('v1.0', ProjectStage.FEATURE_ENG, 1, HyperparamProfile.WIDE)
+    V1_1 = ('v1.1', ProjectStage.FEATURE_ENG, 1, HyperparamProfile.RESTRICTED)
+    V2_0 = ('v2.0', ProjectStage.FEATURE_ENG, 2, HyperparamProfile.RESTRICTED)
+    V2_1 = ('v2.1', ProjectStage.FEATURE_ENG, 3, HyperparamProfile.RESTRICTED)
+    V3_0 = ('v3.0', ProjectStage.FEATURE_ENG, 4, HyperparamProfile.RESTRICTED)
 
     def __init__(
         self,
         version_str: str,
         stage: ProjectStage,
         sql_version: int,
+        hyperparam_profile: HyperparamProfile,
     ) -> None:
         self.version_str = version_str
         self.stage = stage
         self.sql_version = sql_version
+        self.hyperparam_profile = hyperparam_profile
 
     @property
     def feature_profile(self) -> FeatureProfile:

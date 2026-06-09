@@ -37,6 +37,14 @@ def get_model_path(model_version: ModelVersion) -> pathlib.Path:
     return MODELS_DIR.joinpath(f'model_{model_version.version_str}.joblib')
 
 
+def get_metrics_path(model_version: ModelVersion) -> pathlib.Path:
+    """
+    Get the path to the model evaluation metrics for a given model version.
+
+    """
+    return MODELS_DIR.joinpath(f'metrics_{model_version.version_str}.json')
+
+
 def load_data(table_name: str) -> pd.DataFrame:
     """
     Query a dataset from BigQuery.
@@ -77,6 +85,24 @@ def save_model(model_version: ModelVersion, model_obj: Any) -> None:
     """
     ensure_models_dir()
     joblib.dump(model_obj, get_model_path(model_version))
+
+
+def load_model(model_version: ModelVersion):
+    """
+    Load a saved model artiface.
+
+    """
+    return joblib.load(get_model_path(model_version))
+
+
+def save_metrics(model_version: ModelVersion, metrics: dict[str, Any]) -> None:
+    """
+    Save evaluation metrics for a model.
+
+    """
+    ensure_models_dir()
+    with open(get_metrics_path(model_version), 'w') as f:
+        json.dump(metrics, f, indent=4)
 
 
 def parse_version_arg(version_str: str) -> ModelVersion:

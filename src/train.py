@@ -1,23 +1,10 @@
 import json
-import joblib
+from typing import Any
 from src import io, model_config, model, pipelines
 from src.db_config import DatasetSplit
 
 
-def load_hyperparams(model_version: model_config.ModelVersion) -> dict[str, float]:
-    """
-    Load hyperparameters for a given model version.
-
-    """
-    with open(io.get_hyperparam_path(model_version), 'r') as f:
-        hyperparams = json.load(f)
-
-    return hyperparams
-
-
-def main(
-    model_version: model_config.ModelVersion, hyperparams: dict[str, float]
-) -> None:
+def main(model_version: model_config.ModelVersion, hyperparams: dict[str, Any]) -> None:
     """
     Train and store a model given a model version and a set
     of hyperparameters.
@@ -44,7 +31,7 @@ def main(
     clf = model.model_from_hyperparams(hyperparams, preprocessor, X, y)
 
     # Save model
-    joblib.dump(clf, io.get_model_path(model_version))
+    io.save_model(model_version, clf)
 
 
 if __name__ == '__main__':

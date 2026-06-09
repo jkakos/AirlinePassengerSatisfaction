@@ -1,5 +1,10 @@
+import json
 import pathlib
-from model_config import ModelVersion
+from typing import Any
+
+import joblib
+
+from src.model_config import ModelVersion
 
 MODELS_DIR = pathlib.Path(__file__).parents[1].joinpath('models')
 
@@ -27,3 +32,34 @@ def get_model_path(model_version: ModelVersion) -> pathlib.Path:
 
     """
     return MODELS_DIR.joinpath(f'model_{model_version.version_str}.joblib')
+
+
+def save_hyperparams(model_version: ModelVersion, params: dict[str, Any]) -> None:
+    """
+    Save hyperparameters for a given model version.
+
+    """
+    ensure_models_dir()
+    with open(get_hyperparam_path(model_version), 'w') as f:
+        json.dump(params, f, indent=4)
+
+
+def load_hyperparams(model_version: ModelVersion) -> dict[str, Any]:
+    """
+    Load hyperparameters for a given model version.
+
+    """
+    with open(get_hyperparam_path(model_version), 'r') as f:
+        hyperparams = json.load(f)
+
+    return hyperparams
+
+
+def save_model(model_version: ModelVersion, model_obj: Any) -> None:
+    """
+    Save a trained model pipeline artifact.
+
+    """
+    ensure_models_dir()
+    joblib.dump(model_obj, get_model_path(model_version))
+

@@ -1,4 +1,4 @@
-import json
+import argparse
 import optuna
 from optuna.samplers import TPESampler
 from src import io, model_config, model, pipelines
@@ -41,9 +41,7 @@ def main(model_version: model_config.ModelVersion) -> None:
     best_params = {k: v for (k, v) in study.best_params.items()}
 
     # Save best hyperparameters
-    io.ensure_models_dir()
-    with open(io.get_hyperparam_path(model_version), 'w') as f:
-        json.dump(best_params, f, indent=4)
+    io.save_hyperparams(model_version, best_params)
 
 
 if __name__ == '__main__':

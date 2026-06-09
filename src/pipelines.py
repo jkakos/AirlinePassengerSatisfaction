@@ -74,8 +74,8 @@ def load_data(train_table: str, test_table: str) -> tuple[pd.DataFrame, pd.DataF
 
     """
     client = bigquery.Client(project=db_config.PROJECT_ID)
-    train_data = query_data(client, f'SELECT * FROM {train_table}')
-    test_data = query_data(client, f'SELECT * FROM {test_table}')
+    train_data = query_data(client, f'SELECT * FROM `{train_table}`')
+    test_data = query_data(client, f'SELECT * FROM `{test_table}`')
 
     return train_data, test_data
 

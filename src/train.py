@@ -1,4 +1,4 @@
-import json
+import argparse
 from typing import Any
 from src import io, model_config, model, pipelines
 from src.db_config import DatasetSplit
@@ -35,6 +35,14 @@ def main(model_version: model_config.ModelVersion, hyperparams: dict[str, Any]) 
 
 
 if __name__ == '__main__':
-    model_version = model_config.ModelVersion.V3_0
-    hyperparams = load_hyperparams(model_version)
-    main(model_version, hyperparams)
+    parser = argparse.ArgumentParser(description='Train a specific model version.')
+    parser.add_argument(
+        "--version",
+        type=str,
+        required=True,
+        help="The ModelVersion enum key to run (e.g., V1_0, V1_1, V2_0, etc.)",
+    )
+    args = parser.parse_args()
+    version = io.parse_version_arg(args.version)
+    hyperparams = io.load_hyperparams(version)
+    main(version, hyperparams)

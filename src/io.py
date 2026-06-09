@@ -63,3 +63,23 @@ def save_model(model_version: ModelVersion, model_obj: Any) -> None:
     ensure_models_dir()
     joblib.dump(model_obj, get_model_path(model_version))
 
+
+def parse_version_arg(version_str: str) -> ModelVersion:
+    """
+    Parse a version string from the command line into a ModelVersion enum.
+    The version string should be a number with decimals, which will be
+    replaced with underscores and preceded with a 'V' to match the
+    ModelVersion style.
+
+    """
+    normalized_str = version_str.replace('.', '_')
+    version = f'V{normalized_str}'
+
+    try:
+        return ModelVersion[version]
+    except KeyError:
+        valid_versions = [v.name for v in ModelVersion]
+        raise ValueError(
+            f'{version_str} is not a valid ModelVersion. '
+            f'Available versions are: {valid_versions}'
+        )

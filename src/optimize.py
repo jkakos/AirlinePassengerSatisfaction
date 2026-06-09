@@ -45,5 +45,15 @@ def main(model_version: model_config.ModelVersion) -> None:
 
 
 if __name__ == '__main__':
-    model_version = model_config.ModelVersion.V3_0
-    main(model_version)
+    parser = argparse.ArgumentParser(
+        description='Run hyperparameter optimization for a specific model version.'
+    )
+    parser.add_argument(
+        "--version",
+        type=str,
+        required=True,
+        help="The ModelVersion enum key to run (e.g., V1_0, V1_1, V2_0, etc.)",
+    )
+    args = parser.parse_args()
+    version = io.parse_version_arg(args.version)
+    main(version)

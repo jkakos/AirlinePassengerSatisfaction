@@ -46,11 +46,17 @@ if __name__ == '__main__':
         description='Run hyperparameter optimization for a specific model version.'
     )
     parser.add_argument(
-        "--version",
+        '--version',
         type=str,
         required=True,
-        help="The ModelVersion enum key to run (e.g., V1_0, V1_1, V2_0, etc.)",
+        help='The ModelVersion enum key to run (e.g., V1_0, V1_1, V2_0, etc.)',
+    )
+    parser.add_argument(
+        '--n_trials',
+        type=int,
+        required=False,
+        help='The number of Optuna study trials to run.',
     )
     args = parser.parse_args()
     version = io.parse_version_arg(args.version)
-    main(version)
+    main(version, n_trials=args.n_trials)

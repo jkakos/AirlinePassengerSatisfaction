@@ -6,7 +6,7 @@ used in the modeling notebook.
 
 import pathlib
 from dataclasses import astuple, dataclass
-from typing import Callable, TypeGuard
+from typing import TypeGuard
 
 import matplotlib.pyplot as plt
 import numpy as np

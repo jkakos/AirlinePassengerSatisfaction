@@ -1,7 +1,7 @@
 import json
 import optuna
 from optuna.samplers import TPESampler
-from src import model_config, model, pipelines
+from src import io, model_config, model, pipelines
 from src.db_config import DatasetSplit
 
 
@@ -41,8 +41,8 @@ def main(model_version: model_config.ModelVersion) -> None:
     best_params = {k: v for (k, v) in study.best_params.items()}
 
     # Save best hyperparameters
-    model_config.ensure_models_dir()
-    with open(model_config.get_hyperparam_path(model_version), 'w') as f:
+    io.ensure_models_dir()
+    with open(io.get_hyperparam_path(model_version), 'w') as f:
         json.dump(best_params, f, indent=4)
 
 

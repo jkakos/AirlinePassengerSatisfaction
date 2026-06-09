@@ -1,6 +1,6 @@
 import json
 import joblib
-from src import model_config, model, pipelines
+from src import io, model_config, model, pipelines
 from src.db_config import DatasetSplit
 
 
@@ -9,7 +9,7 @@ def load_hyperparams(model_version: model_config.ModelVersion) -> dict[str, floa
     Load hyperparameters for a given model version.
 
     """
-    with open(model_config.get_hyperparam_path(model_version), 'r') as f:
+    with open(io.get_hyperparam_path(model_version), 'r') as f:
         hyperparams = json.load(f)
 
     return hyperparams
@@ -44,7 +44,7 @@ def main(
     clf = model.model_from_hyperparams(hyperparams, preprocessor, X, y)
 
     # Save model
-    joblib.dump(clf, model_config.get_model_path(model_version))
+    joblib.dump(clf, io.get_model_path(model_version))
 
 
 if __name__ == '__main__':

@@ -14,17 +14,12 @@ def main(model_version: model_config.ModelVersion, hyperparams: dict[str, Any]) 
     data = io.load_data(model_version.get_table_name(DatasetSplit.TRAIN))
 
     # Get features and target
-    numeric_features, categorical_features, passthrough_features = (
-        pipelines.get_model_features(model_version.feature_profile)
-    )
-    features = [*numeric_features, *categorical_features, *passthrough_features]
-    X = data[features]
+    features = pipelines.get_model_features(model_version.feature_profile)
+    X = data[features['all']]
     y = data[model_config.TARGET]
 
     # Set up preprocessor and train model
-    preprocessor = pipelines.get_pipeline_preprocessor(
-        numeric_features, categorical_features
-    )
+    preprocessor = pipelines.get_pipeline_preprocessor(features)
     clf = model.model_from_hyperparams(hyperparams, preprocessor, X, y)
 
     # Save model

@@ -76,17 +76,30 @@ def get_model_features(
         for col in (model_config.CATEGORICAL_COLS + profile.add_cat_cols)
         if col not in (profile.drop_cols + profile.passthrough_cols)
     ]
-    return numeric_features, categorical_features, profile.passthrough_cols
+
+    features = {
+        'all': [*numeric_features, *categorical_features, *profile.passthrough_cols],
+        'cat': categorical_features,
+        'num': numeric_features,
+        'passthrough': profile.passthrough_cols,
+    }
+
+    # Ensure features are present
+    if not features['all']:
+        raise ValueError('No features were given.')
+
+    return features
 
 
-def get_pipeline_preprocessor(
-    numeric_features, categorical_features
-) -> ColumnTransformer:
+def get_pipeline_preprocessor(features: dict[str, list[str]]) -> ColumnTransformer:
     """
     Set up the ColumnTransformer preprocessor for the model pipeline.
 
     """
     transformers = []
+    numeric_features = features['num']
+    categorical_features = features['cat']
+
     if numeric_features:
         transformers.append(('num', StandardScaler(), numeric_features))
     if categorical_features:
@@ -115,20 +128,14 @@ def run_model(
     hyperparameters for the model.
 
     """
-    numeric_features, categorical_features, passthrough_features = get_model_features(
-        model_version.feature_profile
-    )
+    features = get_model_features(model_version.feature_profile)
 
-    if not any([numeric_features, categorical_features, passthrough_features]):
-        raise ValueError('No features were given.')
-
-    features = [*numeric_features, *categorical_features, *passthrough_features]
-
-    X = df[features]
+    X = df[features['all']]
     y = df[target]
-    X_test = df_test[features]
+    X_test = df_test[features['all']]
     y_test = df_test[target]
 
+    preprocessor = get_pipeline_preprocessor(features)
     seed = model_config.OptimizationProfile.SEED
     n_trials = model_config.OptimizationProfile.N_TRIALS
 

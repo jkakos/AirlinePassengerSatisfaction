@@ -1,11 +1,9 @@
 import argparse
-import optuna
-from optuna.samplers import TPESampler
 from src import io, model_config, model, pipelines
 from src.db_config import DatasetSplit
 
 
-def main(model_version: model_config.ModelVersion) -> None:
+def main(model_version: model_config.ModelVersion, n_trials: int | None = None) -> None:
     """
     Train and store a model given a model version and a set
     of hyperparameters.
@@ -21,15 +19,11 @@ def main(model_version: model_config.ModelVersion) -> None:
 
     # Set up preprocessor
     preprocessor = pipelines.get_pipeline_preprocessor(features)
-    objective_fn = lambda trial: model.objective(
-        trial, X, y, preprocessor, model_version.hyperparam_profile
-    )
 
-    # Set up and run Optuna optimization
-    opt = model_config.OptimizationProfile
-    study_sampler = TPESampler(seed=opt.SEED)
-    study = optuna.create_study(direction='maximize', sampler=study_sampler)
-    study.optimize(objective_fn, n_trials=opt.N_TRIALS, show_progress_bar=True)
+    # Run Optuna optimization
+    study = model.optimize_hyperparams(
+        X, y, preprocessor, model_version.hyperparam_profile, n_trials=n_trials
+    )
     best_params = {k: v for (k, v) in study.best_params.items()}
 
     # Save best hyperparameters

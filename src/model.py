@@ -3,6 +3,7 @@ from typing import Any
 import lightgbm as lgb
 import optuna
 import pandas as pd
+from optuna.samplers import TPESampler
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
@@ -73,3 +74,27 @@ def objective(
     ).mean()
 
     return score
+
+
+def optimize_hyperparams(
+    X: pd.DataFrame,
+    y: pd.Series,
+    preprocessor: ColumnTransformer,
+    hyperparam_profile: HyperparamProfile,
+    n_trials: int | None = None,
+) -> optuna.study.Study:
+    """
+    Run an optuna study to optimize hyperparameters.
+
+    """
+    if n_trials is None:
+        n_trials = OptimizationProfile.N_TRIALS
+
+    objective_fn = lambda trial: objective(
+        trial, X, y, preprocessor, hyperparam_profile
+    )
+    study_sampler = TPESampler(seed=OptimizationProfile.SEED)
+    study = optuna.create_study(direction='maximize', sampler=study_sampler)
+    study.optimize(objective_fn, n_trials=n_trials, show_progress_bar=True)
+
+    return study

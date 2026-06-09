@@ -58,7 +58,7 @@ def is_classifier(obj) -> TypeGuard[scoring.Classifier]:
 
 def get_model_features(
     profile: model_config.FeatureProfile,
-) -> tuple[list[str], list[str], list[str]]:
+) -> dict[str, list[str]]:
     """
     Get the updated numeric and categorical features that will be passed
     through the model preprocessor.
@@ -136,16 +136,9 @@ def run_model(
     y_test = df_test[target]
 
     preprocessor = get_pipeline_preprocessor(features)
-    seed = model_config.OptimizationProfile.SEED
-    n_trials = model_config.OptimizationProfile.N_TRIALS
-
-    preprocessor = get_pipeline_preprocessor(numeric_features, categorical_features)
-    objective_fn = lambda trial: model.objective(
-        trial, X, y, preprocessor, model_version.hyperparam_profile
+    study = model.optimize_hyperparams(
+        X, y, preprocessor, model_version.hyperparam_profile
     )
-    study_sampler = TPESampler(seed=seed)
-    study = optuna.create_study(direction='maximize', sampler=study_sampler)
-    study.optimize(objective_fn, n_trials=n_trials, show_progress_bar=True)
     clf = model.model_from_optuna(study, preprocessor, X, y)
 
     return ExperimentResult(X, y, X_test, y_test, clf, study, preprocessor)

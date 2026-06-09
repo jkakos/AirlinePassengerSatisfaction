@@ -13,14 +13,13 @@ import numpy as np
 import optuna
 import pandas as pd
 import shap
-from google.cloud import bigquery
 from matplotlib.figure import Figure
 from optuna.samplers import TPESampler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from src import db_config, model, model_config, scoring
+from src import model, model_config, scoring
 from src import inspection as insp
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)  # hide optuna's print statements
@@ -55,29 +54,6 @@ def is_classifier(obj) -> TypeGuard[scoring.Classifier]:
         and hasattr(obj, 'predict_proba')
         and callable(getattr(obj, 'predict_proba'))
     )
-
-
-def query_data(client: bigquery.Client, query: str) -> pd.DataFrame:
-    """
-    Query data from BigQuery and return a dataframe.
-
-    """
-    df = client.query(query).to_dataframe()
-    df = model_config.set_dtypes(df)
-
-    return df
-
-
-def load_data(train_table: str, test_table: str) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Query the training and test data from BigQuery.
-
-    """
-    client = bigquery.Client(project=db_config.PROJECT_ID)
-    train_data = query_data(client, f'SELECT * FROM `{train_table}`')
-    test_data = query_data(client, f'SELECT * FROM `{test_table}`')
-
-    return train_data, test_data
 
 
 def get_model_features(

@@ -3,8 +3,11 @@ import pathlib
 from typing import Any
 
 import joblib
+import pandas as pd
+from google.cloud import bigquery
 
-from src.model_config import ModelVersion
+from src.db_config import PROJECT_ID
+from src.model_config import ModelVersion, set_dtypes
 
 MODELS_DIR = pathlib.Path(__file__).parents[1].joinpath('models')
 
@@ -32,6 +35,18 @@ def get_model_path(model_version: ModelVersion) -> pathlib.Path:
 
     """
     return MODELS_DIR.joinpath(f'model_{model_version.version_str}.joblib')
+
+
+def load_data(table_name: str) -> pd.DataFrame:
+    """
+    Query a dataset from BigQuery.
+
+    """
+    client = bigquery.Client(project=PROJECT_ID)
+    df = client.query(f'SELECT * FROM `{table_name}`').to_dataframe()
+    df = set_dtypes(df)
+
+    return df
 
 
 def save_hyperparams(model_version: ModelVersion, params: dict[str, Any]) -> None:

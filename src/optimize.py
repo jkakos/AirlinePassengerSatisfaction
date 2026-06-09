@@ -12,10 +12,7 @@ def main(model_version: model_config.ModelVersion) -> None:
 
     """
     # Load data
-    data, _ = pipelines.load_data(
-        train_table=model_version.get_table_name(DatasetSplit.TRAIN),
-        test_table=model_version.get_table_name(DatasetSplit.TEST),
-    )
+    data = io.load_data(model_version.get_table_name(DatasetSplit.TRAIN))
 
     # Get features and target
     numeric_features, categorical_features, passthrough_features = (

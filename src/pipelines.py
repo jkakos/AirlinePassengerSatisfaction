@@ -60,8 +60,8 @@ def get_model_features(
     profile: model_config.FeatureProfile,
 ) -> tuple[list[str], list[str], list[str]]:
     """
-    Get the updated numeric and categorical features that will passed through
-    the model preprocessor.
+    Get the updated numeric and categorical features that will be passed
+    through the model preprocessor.
 
     """
     numeric_features = [

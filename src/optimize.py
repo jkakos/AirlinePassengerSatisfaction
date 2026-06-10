@@ -1,5 +1,5 @@
 import argparse
-from src import io, model_config, model, notebook_utils
+from src import io, model_config, model, processing
 from src.db_config import DatasetSplit
 
 
@@ -13,12 +13,12 @@ def main(model_version: model_config.ModelVersion, n_trials: int | None = None) 
     data = io.load_data(model_version.get_table_name(DatasetSplit.TRAIN))
 
     # Get features and target
-    features = notebook_utils.get_model_features(model_version.feature_profile)
+    features = processing.get_model_features(model_version.feature_profile)
     X = data[features['all']]
     y = data[model_config.TARGET]
 
     # Set up preprocessor
-    preprocessor = notebook_utils.get_pipeline_preprocessor(features)
+    preprocessor = processing.get_pipeline_preprocessor(features)
 
     # Run Optuna optimization
     study = model.optimize_hyperparams(

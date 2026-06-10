@@ -1,6 +1,6 @@
 import argparse
 from typing import Any
-from src import io, model_config, model, notebook_utils
+from src import io, model_config, model, processing
 from src.db_config import DatasetSplit
 
 
@@ -14,12 +14,12 @@ def main(model_version: model_config.ModelVersion, hyperparams: dict[str, Any]) 
     data = io.load_data(model_version.get_table_name(DatasetSplit.TRAIN))
 
     # Get features and target
-    features = notebook_utils.get_model_features(model_version.feature_profile)
+    features = processing.get_model_features(model_version.feature_profile)
     X = data[features['all']]
     y = data[model_config.TARGET]
 
     # Set up preprocessor and train model
-    preprocessor = notebook_utils.get_pipeline_preprocessor(features)
+    preprocessor = processing.get_pipeline_preprocessor(features)
     clf = model.model_from_hyperparams(hyperparams, preprocessor, X, y)
 
     # Save model

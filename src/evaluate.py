@@ -1,5 +1,5 @@
 import argparse
-from src import io, model_config, notebook_utils, scoring
+from src import io, model_config, processing, scoring
 from src.db_config import DatasetSplit
 
 
@@ -8,7 +8,7 @@ def main(model_version: model_config.ModelVersion) -> None:
     test = io.load_data(model_version.get_table_name(DatasetSplit.TEST))
 
     # Get features and target
-    features = notebook_utils.get_model_features(model_version.feature_profile)
+    features = processing.get_model_features(model_version.feature_profile)
     X_test = test[features['all']]
     y_test = test[model_config.TARGET]
 

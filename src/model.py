@@ -11,6 +11,7 @@ from sklearn.pipeline import Pipeline
 from src.model_config import HyperparamProfile, OptimizationProfile
 
 SEED = 99
+optuna.logging.set_verbosity(optuna.logging.WARNING)  # hide optuna's print statements
 
 
 def model_from_hyperparams(

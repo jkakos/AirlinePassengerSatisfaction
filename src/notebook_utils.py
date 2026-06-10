@@ -20,8 +20,6 @@ from sklearn.pipeline import Pipeline
 from src import model, model_config, processing, scoring
 from src import inspection as insp
 
-optuna.logging.set_verbosity(optuna.logging.WARNING)  # hide optuna's print statements
-
 
 @dataclass
 class ExperimentResult:

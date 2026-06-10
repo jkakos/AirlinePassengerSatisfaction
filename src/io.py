@@ -9,7 +9,8 @@ from google.cloud import bigquery
 from src.db_config import PROJECT_ID
 from src.model_config import ModelVersion, set_dtypes
 
-MODELS_DIR = pathlib.Path(__file__).parents[1].joinpath('models')
+ROOT_DIR = pathlib.Path(__file__).parents[1]
+MODELS_DIR = ROOT_DIR.joinpath('models')
 
 
 def ensure_models_dir() -> pathlib.Path:
